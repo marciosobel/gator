@@ -1,6 +1,14 @@
+<script setup>
+import Dropzone from "../components/Dropzone.vue";
+import MenuButtons from "../components/MenuButtons.vue";
+import PasteCode from "../components/PasteCode.vue";
+</script>
+
 <template>
     <main class="container">
-        <p>Hello, world!</p>
+        <Dropzone />
+        <PasteCode />
+        <MenuButtons />
     </main>
 </template>
 
@@ -10,8 +18,6 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     gap: 10px;
 }
 </style>

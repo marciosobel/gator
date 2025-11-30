@@ -11,6 +11,8 @@ import App from "./app/App.vue";
     --color-bg: #181820;
     --color-bg-weak: #1f1f28;
     --color-text: #dcd7ba;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --border-radius: 6px;
 }
 
 @font-face {
@@ -20,7 +22,18 @@ import App from "./app/App.vue";
     font-style: normal;
 }
 
+html,
 body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--color-bg);
+}
+
+* {
+    font-size: 1rem;
+    color: var(--color-text);
+    border: 0;
     font-family:
         Nunito,
         system-ui,
@@ -34,11 +47,10 @@ body {
         "Open Sans",
         "Helvetica Neue",
         sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: var(--color-bg);
-    color: var(--color-text);
+}
+
+button {
+    background: var(--color-bg-weak);
 }
 
 ul {
