@@ -1,4 +1,4 @@
-use crate::SetupResult;
+use crate::{utils, SetupResult};
 use tauri::{
     image::Image,
     menu::{Menu, MenuEvent, MenuItem},
@@ -19,7 +19,7 @@ pub fn setup(app: &App) -> SetupResult {
         .icon(icon)
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .on_menu_event(handle_tray_menu_event)
+        .on_menu_event(handle_menu_event)
         .build(app)?;
 
     tray.on_tray_icon_event(handle_tray_event);
@@ -60,12 +60,12 @@ fn handle_tray_event(icon: &TrayIcon, event: TrayIconEvent) {
             button,
             button_state,
             ..
-        } => handle_tray_click(app, button, button_state),
+        } => handle_click(app, button, button_state),
         _ => {}
     }
 }
 
-fn handle_tray_menu_event(app: &AppHandle, event: MenuEvent) {
+fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
     let event = event.id.as_ref();
 
     match event {
@@ -74,60 +74,30 @@ fn handle_tray_menu_event(app: &AppHandle, event: MenuEvent) {
     }
 }
 
-fn handle_tray_click(app: &AppHandle, button: MouseButton, button_state: MouseButtonState) {
-    match get_tray_window(app) {
+fn handle_click(handle: &AppHandle, button: MouseButton, button_state: MouseButtonState) {
+    match get_window(handle) {
         Some(window) => {
             let _ = window.move_window(Position::TrayCenter);
 
             if button == MouseButton::Left && button_state == MouseButtonState::Up {
-                toggle_window_visibility(&window);
+                utils::window::toggle_visibility(&window);
             }
         }
         None => {
-            eprintln!("unable to find tray window");
+            eprintln!("Unable to find tray window on tray icon click",);
         }
     }
 }
 
-pub fn toggle_window_visibility(window: &WebviewWindow) {
-    let window_is_visible = match window.is_visible() {
-        Err(e) => {
-            eprintln!("unable to get tray window visibility: {}", e);
-            return;
-        }
-        Ok(v) => v,
-    };
-
-    if window_is_visible {
-        hide_tray_window(window);
-    } else {
-        show_tray_window(window);
-    }
-}
-
-pub fn hide_tray_window(window: &WebviewWindow) {
-    if let Err(e) = window.hide() {
-        eprintln!("unable to hide window: {}", e);
-    }
-}
-
-pub fn show_tray_window(window: &WebviewWindow) {
-    if let Err(e) = window.show() {
-        eprintln!("unable to show window: {}", e);
-    }
-
-    if let Err(e) = window.set_focus() {
-        eprintln!("unable to focus window: {}", e);
-    }
-}
-
-pub fn get_tray_window(handle: &AppHandle) -> Option<WebviewWindow> {
+/// Returns the tray window if it exists.
+pub fn get_window(handle: &AppHandle) -> Option<WebviewWindow> {
     handle.get_webview_window(TRAY_WINDOW_ID)
 }
 
-pub fn try_hide_tray(handle: &AppHandle) {
-    let tray = get_tray_window(handle);
+/// Will try to hide the tray window if it exists. No error is returned if it doesn't.
+pub fn try_hide(handle: &AppHandle) {
+    let tray = get_window(handle);
     if let Some(tray) = tray {
-        hide_tray_window(&tray);
+        utils::window::hide(&tray);
     }
 }

@@ -2,6 +2,7 @@ use tauri::App;
 
 mod commands;
 mod config;
+mod utils;
 
 use commands::window::{close_window, open_window};
 
