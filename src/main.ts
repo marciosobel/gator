@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { router } from "./router";
 import Root from "./Root.vue";
 
-createApp(Root).mount("#root");
+createApp(Root).use(router).mount("#root");

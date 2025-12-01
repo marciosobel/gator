@@ -1,6 +1,6 @@
 <script setup>
 import Dropzone from "../components/Dropzone.vue";
-import MenuButtons from "../components/MenuButtons.vue";
+import TrayButtons from "../components/TrayButtons.vue";
 import PasteCode from "../components/PasteCode.vue";
 </script>
 
@@ -8,7 +8,7 @@ import PasteCode from "../components/PasteCode.vue";
     <main class="container">
         <Dropzone />
         <PasteCode />
-        <MenuButtons />
+        <TrayButtons />
     </main>
 </template>
 

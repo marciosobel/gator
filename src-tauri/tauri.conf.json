@@ -12,7 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "croc-ui",
+        "title": "Croc UI",
+        "label": "tray",
+        "url": "tray",
         "width": 280,
         "height": 354,
         "resizable": false,
@@ -24,7 +26,26 @@
         "visible": false,
         "minimizable": false,
         "decorations": false,
-        "focus": false
+        "focus": false,
+        "skipTaskbar": true
+      },
+      {
+        "title": "Croc UI",
+        "label": "main",
+        "url": "main",
+        "width": 600,
+        "height": 400,
+        "resizable": true,
+        "fullscreen": false,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay",
+        "alwaysOnTop": false,
+        "closable": true,
+        "visible": false,
+        "minimizable": true,
+        "decorations": false,
+        "focus": false,
+        "skipTaskbar": false
       }
     ],
     "security": {

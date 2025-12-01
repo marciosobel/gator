@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { LucideIcon, Maximize2, X } from "lucide-vue-next";
-import { exit } from "@tauri-apps/plugin-process";
 import { ref } from "vue";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 type MenuButton = {
     icon?: LucideIcon;
@@ -14,12 +15,19 @@ const buttons = ref<MenuButton[]>([
     {
         icon: Maximize2,
         text: "Open main window",
-        action: () => console.log("Should open main window!"),
+        action: async () => {
+            console.info("Should open main window!");
+            console.info("Calling invoke...");
+            await invoke("open_window", { hideTray: true });
+        },
     },
     {
         icon: X,
         text: "Quit",
-        action: () => exit(1),
+        action: async () => {
+            console.info("Exiting application...");
+            await getCurrentWindow().close();
+        },
     },
 ]);
 </script>

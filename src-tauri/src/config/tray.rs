@@ -7,6 +7,8 @@ use tauri::{
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
+pub const TRAY_WINDOW_ID: &'static str = "tray";
+
 /// Setup the system tray icon and its behavior.
 pub fn setup(app: &App) -> SetupResult {
     app.handle().plugin(tauri_plugin_positioner::init())?;
@@ -73,9 +75,7 @@ fn handle_tray_menu_event(app: &AppHandle, event: MenuEvent) {
 }
 
 fn handle_tray_click(app: &AppHandle, button: MouseButton, button_state: MouseButtonState) {
-    let window = app.get_webview_window("main");
-
-    match window {
+    match get_tray_window(app) {
         Some(window) => {
             let _ = window.move_window(Position::TrayCenter);
 
@@ -84,35 +84,50 @@ fn handle_tray_click(app: &AppHandle, button: MouseButton, button_state: MouseBu
             }
         }
         None => {
-            eprintln!("unable to find main window");
+            eprintln!("unable to find tray window");
         }
     }
 }
 
-fn toggle_window_visibility(window: &WebviewWindow) {
-    let window_is_visible = window
-        .is_visible()
-        .expect("unable to tell if window is visible");
+pub fn toggle_window_visibility(window: &WebviewWindow) {
+    let window_is_visible = match window.is_visible() {
+        Err(e) => {
+            eprintln!("unable to get tray window visibility: {}", e);
+            return;
+        }
+        Ok(v) => v,
+    };
 
     if window_is_visible {
-        hide_window(window);
+        hide_tray_window(window);
     } else {
-        show_window(window);
+        show_tray_window(window);
     }
 }
 
-fn hide_window(window: &WebviewWindow) {
+pub fn hide_tray_window(window: &WebviewWindow) {
     if let Err(e) = window.hide() {
         eprintln!("unable to hide window: {}", e);
     }
 }
 
-fn show_window(window: &WebviewWindow) {
+pub fn show_tray_window(window: &WebviewWindow) {
     if let Err(e) = window.show() {
         eprintln!("unable to show window: {}", e);
     }
 
     if let Err(e) = window.set_focus() {
         eprintln!("unable to focus window: {}", e);
+    }
+}
+
+pub fn get_tray_window(handle: &AppHandle) -> Option<WebviewWindow> {
+    handle.get_webview_window(TRAY_WINDOW_ID)
+}
+
+pub fn try_hide_tray(handle: &AppHandle) {
+    let tray = get_tray_window(handle);
+    if let Some(tray) = tray {
+        hide_tray_window(&tray);
     }
 }
