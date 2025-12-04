@@ -1,4 +1,5 @@
 <script setup>
+import WindowDecorations from "./Decorations.vue";
 import { invoke } from "@tauri-apps/api/core";
 
 const close = async () => {
@@ -7,5 +8,6 @@ const close = async () => {
 </script>
 
 <template>
+    <WindowDecorations />
     <main>oi!</main>
 </template>
