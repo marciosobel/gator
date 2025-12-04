@@ -6,8 +6,12 @@
 :root {
     --color-bg: #181820;
     --color-bg-weak: #1f1f28;
+    --color-bg-active: #363646;
     --color-text: #dcd7ba;
     --color-border: rgba(255, 255, 255, 0.1);
+    --color-danger: #c4746e;
+    --color-danger-weak: #946160;
+
     --border-radius: 6px;
 }
 

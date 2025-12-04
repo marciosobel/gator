@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "tray-window-capability",
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux"
+  ],
+  "windows": [
+    "tray"
+  ],
+  "permissions": [
+    "positioner:default",
+    "core:window:allow-close"
+  ]
+}

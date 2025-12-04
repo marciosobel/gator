@@ -1,4 +1,4 @@
-use crate::{utils, SetupResult};
+use crate::{utils::window, SetupResult};
 use tauri::{
     image::Image,
     menu::{Menu, MenuEvent, MenuItem},
@@ -77,10 +77,13 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
 fn handle_click(handle: &AppHandle, button: MouseButton, button_state: MouseButtonState) {
     match get_window(handle) {
         Some(window) => {
-            let _ = window.move_window(Position::TrayCenter);
+            // move window, no matter the button or the button state
+            if let Err(e) = window.move_window(Position::TrayCenter) {
+                eprintln!("Unable to position tray window: {}", e);
+            }
 
             if button == MouseButton::Left && button_state == MouseButtonState::Up {
-                utils::window::toggle_visibility(&window);
+                window::toggle_visibility(&window);
             }
         }
         None => {
@@ -96,8 +99,7 @@ pub fn get_window(handle: &AppHandle) -> Option<WebviewWindow> {
 
 /// Will try to hide the tray window if it exists. No error is returned if it doesn't.
 pub fn try_hide(handle: &AppHandle) {
-    let tray = get_window(handle);
-    if let Some(tray) = tray {
-        utils::window::hide(&tray);
+    if let Some(tray) = get_window(handle) {
+        window::hide(&tray);
     }
 }

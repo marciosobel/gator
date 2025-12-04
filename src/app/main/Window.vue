@@ -7,8 +7,5 @@ const close = async () => {
 </script>
 
 <template>
-    <main>
-        <button @click="close">Close</button>
-        <p>oi!</p>
-    </main>
+    <main>oi!</main>
 </template>

@@ -1,14 +1,14 @@
 <script setup>
-import Dropzone from "../components/Dropzone.vue";
-import TrayButtons from "../components/TrayButtons.vue";
-import PasteCode from "../components/PasteCode.vue";
+import Dropzone from "@/components/Dropzone.vue";
+import PasteCode from "@/components/PasteCode.vue";
+import Actions from "./Actions.vue";
 </script>
 
 <template>
     <main class="container">
         <Dropzone />
         <PasteCode />
-        <TrayButtons />
+        <Actions />
     </main>
 </template>
 

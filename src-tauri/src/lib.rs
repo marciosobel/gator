@@ -4,7 +4,7 @@ mod commands;
 mod config;
 mod utils;
 
-use commands::window::{close_window, open_window};
+use commands::window::{close_tray, close_window, open_window};
 
 pub type SetupResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 
@@ -13,7 +13,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(setup)
-        .invoke_handler(tauri::generate_handler![open_window, close_window])
+        .invoke_handler(tauri::generate_handler![
+            open_window,
+            close_window,
+            close_tray
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

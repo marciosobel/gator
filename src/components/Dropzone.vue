@@ -1,12 +1,16 @@
 <script setup>
 import { Upload } from "lucide-vue-next";
+
+const openDialog = () => {};
 </script>
 
 <template>
-    <label class="dropzone-area" for="dropzone">
-        <Upload :size="24" />
-        <span>Select a file to upload</span>
-    </label>
+    <div>
+        <label class="dropzone-area" for="dropzone">
+            <Upload :size="24" />
+            <span>Select a file to upload</span>
+        </label>
+    </div>
 
     <input type="file" name="dropzone" style="display: none" />
 </template>

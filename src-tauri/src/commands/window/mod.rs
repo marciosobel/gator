@@ -21,3 +21,8 @@ pub fn close_window(handle: tauri::AppHandle) {
         window::hide(&window);
     }
 }
+
+#[tauri::command]
+pub fn close_tray(handle: tauri::AppHandle) {
+    tray::try_hide(&handle);
+}

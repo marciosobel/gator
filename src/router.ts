@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import TrayApp from "./app/TrayApp.vue";
-import MainApp from "./app/MainApp.vue";
+import Tray from "@/app/tray/Window.vue";
+import Main from "@/app/main/Window.vue";
 
 export const router = createRouter({
   routes: [
-    { path: "/tray", component: TrayApp, alias: "/" },
-    { path: "/main", component: MainApp },
+    { path: "/tray", component: Tray, alias: "/" },
+    { path: "/main", component: Main },
   ],
   history: createWebHistory(),
 });
