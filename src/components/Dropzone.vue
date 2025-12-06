@@ -1,18 +1,59 @@
-<script setup>
+<script setup lang="ts">
+import { Event, TauriEvent, UnlistenFn } from "@tauri-apps/api/event";
+import {
+    DragDropEvent,
+    getCurrentWebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
+import { open } from "@tauri-apps/plugin-dialog";
 import { Upload } from "lucide-vue-next";
+import { onMounted, onUnmounted, ref } from "vue";
 
-const openDialog = () => {};
+export type DropzonePayload = { paths: string[] };
+
+const emit = defineEmits<{
+    (e: "files-dropped", filepaths: DropzonePayload): void;
+}>();
+const events = ref<UnlistenFn[]>([]);
+const hovering = ref(false);
+
+const openDialog = async () => {
+    const paths = await open({
+        multiple: true,
+        title: "Select a file to send",
+    });
+    if (!paths || paths.length === 0) return;
+
+    emit("files-dropped", { paths });
+};
+
+const handleDragDropEvent = (e: Event<DragDropEvent>) => {
+    hovering.value = e.event !== TauriEvent.DRAG_LEAVE;
+
+    if (e.event === TauriEvent.DRAG_DROP && e.payload.type === "drop") {
+        emit("files-dropped", e.payload);
+    }
+};
+
+onMounted(async () => {
+    const window = getCurrentWebviewWindow();
+    events.value = await Promise.all([
+        window.onDragDropEvent(handleDragDropEvent),
+    ]);
+});
+onUnmounted(() => {
+    events.value.forEach((unlisten) => unlisten());
+});
 </script>
 
 <template>
-    <div>
-        <label class="dropzone-area" for="dropzone">
+    <div @click="openDialog">
+        <label :class="{ hovering }" class="dropzone-area" for="dropzone">
             <Upload :size="24" />
-            <span>Select a file to upload</span>
+            <span>Select file(s) to upload</span>
         </label>
-    </div>
 
-    <input type="file" name="dropzone" style="display: none" />
+        <input type="file" name="dropzone" style="display: none" />
+    </div>
 </template>
 
 <style scoped>
@@ -35,7 +76,8 @@ const openDialog = () => {};
     transition: opacity 100ms ease-in-out;
 }
 
-.dropzone-area:hover {
+.dropzone-area:hover,
+.dropzone-area.hovering {
     opacity: 100%;
 }
 </style>

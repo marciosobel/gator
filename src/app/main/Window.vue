@@ -1,13 +1,12 @@
-<script setup>
+<script setup lang="ts">
 import WindowDecorations from "./Decorations.vue";
-import { invoke } from "@tauri-apps/api/core";
-
-const close = async () => {
-    await invoke("close_window");
-};
+import Dropzone from "@/components/Dropzone.vue";
 </script>
 
 <template>
     <WindowDecorations />
-    <main>oi!</main>
+    <main>
+        oi!!
+        <Dropzone />
+    </main>
 </template>

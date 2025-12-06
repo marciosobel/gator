@@ -34,7 +34,7 @@ const close = async () => {
 </script>
 
 <template>
-    <header class="window-decorations" data-tauri-drag-region="true">
+    <header class="window-decorations" data-tauri-drag-region>
         <span class="window-title">Croc UI</span>
         <span class="window-controls">
             <DecorationButton @click="minimize">

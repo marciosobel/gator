@@ -17,9 +17,10 @@
 
 @font-face {
     font-family: "Nunito";
-    src: url("./assets/fonts/Nunito.ttf");
+    src: url("../assets/fonts/Nunito.ttf");
     font-weight: normal;
     font-style: normal;
+    font-display: block;
 }
 
 html,
