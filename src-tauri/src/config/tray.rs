@@ -1,4 +1,4 @@
-use crate::{utils::window, SetupResult};
+use crate::{config::main_window, utils::window, SetupResult};
 use tauri::{
     image::Image,
     menu::{Menu, MenuEvent, MenuItem},
@@ -7,14 +7,14 @@ use tauri::{
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
-pub const TRAY_WINDOW_ID: &'static str = "tray";
+pub const WINDOW_ID: &'static str = "tray";
 
 /// Setup the system tray icon and its behavior.
 pub fn setup(app: &App) -> SetupResult {
     app.handle().plugin(tauri_plugin_positioner::init())?;
 
-    let menu = tray_menu(app)?;
-    let icon = tray_icon(app);
+    let menu = create_menu(app)?;
+    let icon = get_icon(app);
     let tray = TrayIconBuilder::new()
         .icon(icon)
         .menu(&menu)
@@ -29,48 +29,58 @@ pub fn setup(app: &App) -> SetupResult {
 
 static MENU_ITEM_CREATION_ERROR: &'static str = "unable to create menu item";
 
-fn tray_menu(app: &App) -> SetupResult<Menu<Wry>> {
+fn create_menu(app: &App) -> SetupResult<Menu<Wry>> {
     let quit =
         MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).expect(MENU_ITEM_CREATION_ERROR);
     let open_main_window = MenuItem::with_id(
         app,
         "open_main_window",
         "Open main window",
-        false,
+        true,
         None::<&str>,
     )
     .expect(MENU_ITEM_CREATION_ERROR);
 
     let menu = Menu::with_items(app, &[&open_main_window, &quit])?;
+
     Ok(menu)
 }
 
-fn tray_icon(app: &App) -> Image<'_> {
+fn get_icon(app: &App) -> Image<'_> {
     app.default_window_icon()
         .expect("should be able to get default window icon")
         .clone()
 }
 
 fn handle_tray_event(icon: &TrayIcon, event: TrayIconEvent) {
-    let app = icon.app_handle();
-    tauri_plugin_positioner::on_tray_event(app, &event);
+    let handle = icon.app_handle();
+    tauri_plugin_positioner::on_tray_event(handle, &event);
 
     match event {
         TrayIconEvent::Click {
             button,
             button_state,
             ..
-        } => handle_click(app, button, button_state),
+        } => handle_click(handle, button, button_state),
         _ => {}
     }
 }
 
-fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
+fn handle_menu_event(handle: &AppHandle, event: MenuEvent) {
     let event = event.id.as_ref();
 
     match event {
-        "quit" => app.exit(0),
-        _ => println!("unknown tray menu event: {}", event),
+        "quit" => handle.exit(0),
+        "open_main_window" => open_main_window(handle),
+        _ => println!("unknown or unhandled tray menu event: {}", event),
+    }
+}
+
+fn open_main_window(handle: &AppHandle) {
+    if let Some(window) = main_window::get(handle) {
+        window::show(&window);
+    } else {
+        eprintln!("Unable to find main window to open from tray menu");
     }
 }
 
@@ -94,7 +104,7 @@ fn handle_click(handle: &AppHandle, button: MouseButton, button_state: MouseButt
 
 /// Returns the tray window if it exists.
 pub fn get_window(handle: &AppHandle) -> Option<WebviewWindow> {
-    handle.get_webview_window(TRAY_WINDOW_ID)
+    handle.get_webview_window(WINDOW_ID)
 }
 
 /// Will try to hide the tray window if it exists. No error is returned if it doesn't.
