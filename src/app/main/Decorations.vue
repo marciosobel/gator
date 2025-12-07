@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Minus, Square, X } from "lucide-vue-next";
 import DecorationButton from "./DecorationButton.vue";
+import { closeMainWindow } from "@/events";
 
 const ICON_SIZE = 16 as const;
 const window = getCurrentWebviewWindow();
@@ -27,10 +27,6 @@ const minimize = async () => {
         await window.minimize();
     }
 };
-
-const close = async () => {
-    await invoke("close_window");
-};
 </script>
 
 <template>
@@ -43,7 +39,7 @@ const close = async () => {
             <DecorationButton @click="toggleMaximize">
                 <Square :size="ICON_SIZE" />
             </DecorationButton>
-            <DecorationButton close @click="close">
+            <DecorationButton close @click="closeMainWindow">
                 <X :size="ICON_SIZE" />
             </DecorationButton>
         </span>
