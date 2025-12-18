@@ -7,16 +7,17 @@ use tauri::{
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
-pub const WINDOW_ID: &'static str = "tray";
+pub const WINDOW_ID: &str = "tray";
+const ICON_ID: &str = "1";
+const MENU_ITEM_CREATION_ERROR: &str = "unable to create menu item";
 
 /// Setup the system tray icon and its behavior.
 pub fn setup(app: &App) -> SetupResult {
     app.handle().plugin(tauri_plugin_positioner::init())?;
 
     let menu = create_menu(app)?;
-    let icon = get_icon(app);
     let tray = TrayIconBuilder::new()
-        .icon(icon)
+        .icon(Icon::Default.into())
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(handle_menu_event)
@@ -26,8 +27,6 @@ pub fn setup(app: &App) -> SetupResult {
 
     Ok(())
 }
-
-static MENU_ITEM_CREATION_ERROR: &'static str = "unable to create menu item";
 
 fn create_menu(app: &App) -> SetupResult<Menu<Wry>> {
     let quit =
@@ -44,12 +43,6 @@ fn create_menu(app: &App) -> SetupResult<Menu<Wry>> {
     let menu = Menu::with_items(app, &[&open_main_window, &quit])?;
 
     Ok(menu)
-}
-
-fn get_icon(app: &App) -> Image<'_> {
-    app.default_window_icon()
-        .expect("should be able to get default window icon")
-        .clone()
 }
 
 fn handle_tray_event(icon: &TrayIcon, event: TrayIconEvent) {
@@ -111,5 +104,97 @@ pub fn get_window(handle: &AppHandle) -> Option<WebviewWindow> {
 pub fn try_hide(handle: &AppHandle) {
     if let Some(tray) = get_window(handle) {
         window::hide(&tray);
+    }
+}
+
+pub fn get_icon(handle: &AppHandle) -> Option<TrayIcon> {
+    if let Some(tray) = handle.tray_by_id(ICON_ID) {
+        Some(tray)
+    } else {
+        eprintln!("Unable to find tray icon by id: {}", ICON_ID);
+        None
+    }
+}
+
+pub fn reset_icon(handle: &AppHandle) {
+    if let Some(tray) = get_icon(handle) {
+        set_icon(&tray, Icon::Default);
+    }
+}
+
+fn set_icon(tray: &TrayIcon, icon: Icon) {
+    if let Err(e) = tray.set_icon(Some(icon.into())) {
+        eprintln!("Unable to set tray icon: {}", e);
+    }
+}
+
+pub fn set_icon_by_progress(handle: &AppHandle, progress: u8) {
+    if let Some(tray) = get_icon(handle) {
+        let icon = match progress {
+            p if p <= 10 => Icon::Progress0,
+            p if p <= 20 => Icon::Progress1,
+            p if p <= 30 => Icon::Progress2,
+            p if p <= 40 => Icon::Progress3,
+            p if p <= 50 => Icon::Progress4,
+            p if p <= 60 => Icon::Progress5,
+            p if p <= 70 => Icon::Progress6,
+            p if p <= 80 => Icon::Progress7,
+            p if p <= 90 => Icon::Progress8,
+            p if p < 100 => Icon::Progress9,
+            p if p >= 100 => Icon::Progress10,
+            _ => Icon::Default,
+        };
+
+        set_icon(&tray, icon);
+    } else {
+        eprintln!("Unable to find tray icon by id: {}", WINDOW_ID);
+        return;
+    }
+}
+
+const ICON_DEFAULT: Image<'_> = tauri::include_image!("./icons/128x128.png");
+const ICON_PROGRESS_0: Image<'_> = tauri::include_image!("./icons/progress/0.png");
+const ICON_PROGRESS_1: Image<'_> = tauri::include_image!("./icons/progress/1.png");
+const ICON_PROGRESS_2: Image<'_> = tauri::include_image!("./icons/progress/2.png");
+const ICON_PROGRESS_3: Image<'_> = tauri::include_image!("./icons/progress/3.png");
+const ICON_PROGRESS_4: Image<'_> = tauri::include_image!("./icons/progress/4.png");
+const ICON_PROGRESS_5: Image<'_> = tauri::include_image!("./icons/progress/5.png");
+const ICON_PROGRESS_6: Image<'_> = tauri::include_image!("./icons/progress/6.png");
+const ICON_PROGRESS_7: Image<'_> = tauri::include_image!("./icons/progress/7.png");
+const ICON_PROGRESS_8: Image<'_> = tauri::include_image!("./icons/progress/8.png");
+const ICON_PROGRESS_9: Image<'_> = tauri::include_image!("./icons/progress/9.png");
+const ICON_PROGRESS_10: Image<'_> = tauri::include_image!("./icons/progress/10.png");
+
+pub enum Icon {
+    Progress0,
+    Progress1,
+    Progress2,
+    Progress3,
+    Progress4,
+    Progress5,
+    Progress6,
+    Progress7,
+    Progress8,
+    Progress9,
+    Progress10,
+    Default,
+}
+
+impl From<Icon> for Image<'_> {
+    fn from(icon: Icon) -> Self {
+        match icon {
+            Icon::Progress0 => ICON_PROGRESS_0,
+            Icon::Progress1 => ICON_PROGRESS_1,
+            Icon::Progress2 => ICON_PROGRESS_2,
+            Icon::Progress3 => ICON_PROGRESS_3,
+            Icon::Progress4 => ICON_PROGRESS_4,
+            Icon::Progress5 => ICON_PROGRESS_5,
+            Icon::Progress6 => ICON_PROGRESS_6,
+            Icon::Progress7 => ICON_PROGRESS_7,
+            Icon::Progress8 => ICON_PROGRESS_8,
+            Icon::Progress9 => ICON_PROGRESS_9,
+            Icon::Progress10 => ICON_PROGRESS_10,
+            Icon::Default => ICON_DEFAULT,
+        }
     }
 }
