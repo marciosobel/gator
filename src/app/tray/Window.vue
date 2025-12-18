@@ -1,23 +1,22 @@
 <script setup lang="ts">
 import Dropzone, { type DropzonePayload } from "@/components/Dropzone.vue";
-import PasteCode from "@/components/PasteCode.vue";
 import Actions from "./Actions.vue";
-import { ref } from "vue";
+import PasteCode from "@/components/PasteCode.vue";
+import { receiveFiles, sendFiles } from "@/events";
 
-const files = ref<string[]>([]);
+const onDrop = ({ paths }: DropzonePayload) => {
+    sendFiles(paths);
+};
 
-const onDrop = (payload: DropzonePayload) => {
-    files.value = payload.paths;
+const onReceive = async (code: string) => {
+    await receiveFiles(code);
 };
 </script>
 
 <template>
     <main class="container">
         <Dropzone @files-dropped="onDrop" />
-        <PasteCode />
-        <div>
-            <p style="font-size: 8px" v-for="file in files">{{ file }}</p>
-        </div>
+        <PasteCode @receive="onReceive" />
         <Actions />
     </main>
 </template>

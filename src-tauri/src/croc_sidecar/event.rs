@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum CrocEvent {
     /// Parsed output for sending files
@@ -13,7 +15,7 @@ pub enum CrocEvent {
     EOF,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct CrocTransferOutput {
     pub progress: u8,
     pub total_size: usize,
@@ -25,7 +27,7 @@ pub struct CrocTransferOutput {
     pub raw_message: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct CrocHashOutput {
     pub progress: u8,
     pub speed: usize,

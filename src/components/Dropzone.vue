@@ -52,17 +52,15 @@ onUnmounted(() => {
             <span>Select file(s) to upload</span>
         </label>
 
-        <input type="file" name="dropzone" style="display: none" />
+        <input type="file" id="dropzone" style="display: none" />
     </div>
 </template>
 
 <style scoped>
 .dropzone-area {
-    width: 80%;
-
     padding: 16px 12px;
     margin-top: 6%;
-    margin-inline: auto;
+    margin-inline: 10px;
 
     display: flex;
     align-items: center;

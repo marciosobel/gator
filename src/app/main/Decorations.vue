@@ -1,47 +1,37 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Minus, Square, X } from "lucide-vue-next";
+import { Pin, PinOff } from "lucide-vue-next";
 import DecorationButton from "./DecorationButton.vue";
-import { closeMainWindow } from "@/events";
+import { onMounted, ref } from "vue";
+import WindowControls from "./WindowControls.vue";
 
 const ICON_SIZE = 16 as const;
 const window = getCurrentWebviewWindow();
+const pinnedToTop = ref(false);
 
-const toggleMaximize = async () => {
-    const isMaximizable = await window.isMaximizable();
-    if (!isMaximizable) {
-        return;
-    }
-
-    const isMaximized = await window.isMaximized();
-    if (isMaximized) {
-        await window.unmaximize();
-    } else {
-        await window.maximize();
-    }
+const togglePinToTop = async () => {
+    pinnedToTop.value = !pinnedToTop.value;
+    await window.setAlwaysOnTop(pinnedToTop.value);
 };
 
-const minimize = async () => {
-    const isMinimizable = await window.isMinimizable();
-    if (isMinimizable) {
-        await window.minimize();
-    }
-};
+onMounted(async () => {
+    pinnedToTop.value = await window.isAlwaysOnTop();
+});
 </script>
 
 <template>
     <header class="window-decorations" data-tauri-drag-region>
-        <span class="window-title">Croc UI</span>
+        <span class="window-title">
+            <img src="/icon.png" alt="Croc Icon" :width="20" />
+            Gator
+        </span>
         <span class="window-controls">
-            <DecorationButton @click="minimize">
-                <Minus :size="ICON_SIZE" />
+            <DecorationButton @click="togglePinToTop">
+                <PinOff v-if="pinnedToTop" :size="ICON_SIZE" />
+                <Pin v-else :size="ICON_SIZE" />
             </DecorationButton>
-            <DecorationButton @click="toggleMaximize">
-                <Square :size="ICON_SIZE" />
-            </DecorationButton>
-            <DecorationButton close @click="closeMainWindow">
-                <X :size="ICON_SIZE" />
-            </DecorationButton>
+
+            <WindowControls :icon-size="ICON_SIZE" />
         </span>
     </header>
 </template>
@@ -60,6 +50,9 @@ const minimize = async () => {
 }
 
 .window-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     pointer-events: none;
 }
 </style>

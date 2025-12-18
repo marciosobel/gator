@@ -4,13 +4,15 @@
 
 <style>
 :root {
-    --color-bg: #181820;
-    --color-bg-weak: #1f1f28;
-    --color-bg-active: #363646;
-    --color-text: #dcd7ba;
+    --color-bg: #272e33;
+    --color-bg-weaker: #2e383c;
+    --color-bg-weak: #374145;
+    --color-bg-active: #495156;
+    --color-text: #d3c6aa;
     --color-border: rgba(255, 255, 255, 0.1);
-    --color-danger: #c4746e;
-    --color-danger-weak: #946160;
+    --color-danger: #e67e80;
+    --color-danger-bg: #4c3743;
+    --color-danger-bg-active: #6b324e;
 
     --border-radius: 6px;
 }
@@ -51,7 +53,8 @@ body {
 }
 
 button {
-    background: var(--color-bg-weak);
+    background: var(--color-bg-weaker);
+    transition: background 100ms ease;
 }
 
 ul {

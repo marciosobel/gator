@@ -38,11 +38,12 @@ const handleClick = () => {
 }
 
 .window-button.close.hover {
-    background: var(--color-danger-weak);
+    background: var(--color-danger-bg);
 }
 
 .window-button.close:active {
-    background: var(--color-danger);
+    background: var(--color-danger-bg-active);
+    color: var(--color-danger);
 }
 
 .window-button:hover:not(.close) {
