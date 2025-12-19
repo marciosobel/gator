@@ -22,13 +22,16 @@ pub async fn send_files(app: AppHandle, files: Vec<String>) {
     while let Some(event) = events.next() {
         match event {
             CrocEvent::CodeGenerated(code) => {
+                tray::reset_icon(&app);
                 app.emit("croc-code-generated", code).unwrap();
             }
             CrocEvent::TransferOutput(data) => {
                 tray::set_icon_by_progress(&app, data.progress);
                 app.emit("croc-transfer-output", data).unwrap();
             }
-            CrocEvent::HashOutput(data) => app.emit("croc-hash-output", data).unwrap(),
+            CrocEvent::HashOutput(data) => {
+                tray::set_icon_by_progress(&app, data.progress);
+                app.emit("croc-hash-output", data).unwrap()},
             CrocEvent::Done => {
                 tray::reset_icon(&app);
                 app.emit("croc-done", ()).unwrap();

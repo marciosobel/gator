@@ -56,6 +56,7 @@ fn try_parse_hashing(raw: &str) -> Option<CrocHashOutput> {
         return None;
     }
 
+    let raw = raw.strip_prefix("Hashing")?;
     let percent_pos = raw.rfind('%')?;
     let space_before_percent = raw[..percent_pos].rfind(' ')?;
     let after_percent = &raw[percent_pos + 1..];

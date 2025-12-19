@@ -31,16 +31,16 @@ pub fn setup(app: &App) -> SetupResult {
 fn create_menu(app: &App) -> SetupResult<Menu<Wry>> {
     let quit =
         MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).expect(MENU_ITEM_CREATION_ERROR);
-    let open_main_window = MenuItem::with_id(
+    let toggle_main_window = MenuItem::with_id(
         app,
-        "open_main_window",
-        "Open main window",
+        "toggle_window_visibility",
+        "Show/Hide window",
         true,
         None::<&str>,
     )
     .expect(MENU_ITEM_CREATION_ERROR);
 
-    let menu = Menu::with_items(app, &[&open_main_window, &quit])?;
+    let menu = Menu::with_items(app, &[&toggle_main_window, &quit])?;
 
     Ok(menu)
 }
@@ -64,14 +64,14 @@ fn handle_menu_event(handle: &AppHandle, event: MenuEvent) {
 
     match event {
         "quit" => handle.exit(0),
-        "open_main_window" => open_main_window(handle),
+        "toggle_window_visibility" => toggle_main_window(handle),
         _ => println!("unknown or unhandled tray menu event: {}", event),
     }
 }
 
-fn open_main_window(handle: &AppHandle) {
+fn toggle_main_window(handle: &AppHandle) {
     if let Some(window) = main_window::get(handle) {
-        window::show(&window);
+        window::toggle_visibility(&window);
     } else {
         eprintln!("Unable to find main window to open from tray menu");
     }

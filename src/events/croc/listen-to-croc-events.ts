@@ -1,6 +1,6 @@
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
-enum CrocEvent {
+export enum CrocEvent {
   TransferOutput = "croc-transfer-output",
   HashOutput = "croc-hash-output",
   CodeGenerated = "croc-code-generated",
@@ -39,7 +39,7 @@ interface CrocEventHandlers {
   onError?: () => MaybePromise<unknown>;
 }
 
-interface CrocTransferOutput {
+export interface CrocTransferOutput {
   progress: number;
   total_size: number;
   total_sent: number;
@@ -50,7 +50,7 @@ interface CrocTransferOutput {
   raw_message: string;
 }
 
-interface CrocHashOutput {
+export interface CrocHashOutput {
   progress: number;
   speed: number;
   time_spent: number;

@@ -3,6 +3,12 @@
 </template>
 
 <style>
+#root {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+}
+
 :root {
     --color-bg: #272e33;
     --color-bg-weaker: #2e383c;
@@ -13,6 +19,8 @@
     --color-danger: #e67e80;
     --color-danger-bg: #4c3743;
     --color-danger-bg-active: #6b324e;
+    --color-success: #a7c080;
+    --color-success-bg: #3c4841;
 
     --border-radius: 6px;
 }
@@ -55,6 +63,14 @@ body {
 button {
     background: var(--color-bg-weaker);
     transition: background 100ms ease;
+}
+
+button:hover {
+    background: var(--color-bg-weak);
+}
+
+button:active {
+    background: var(--color-bg-active);
 }
 
 ul {

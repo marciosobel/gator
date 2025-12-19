@@ -10,8 +10,12 @@ const props = defineProps<{
 const insertedCode = ref("");
 
 const pasteCode = async () => {
-    const code = await readText();
-    insertedCode.value = code.trim();
+    try {
+        const code = await readText();
+        insertedCode.value = code.trim();
+    } catch (e) {
+        console.error("[ERROR] Failed to paste clipboard contents: ", e);
+    }
 };
 </script>
 
@@ -52,7 +56,6 @@ const pasteCode = async () => {
 
 <style scoped>
 .insert-code-container {
-    margin-inline: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -114,6 +117,7 @@ const pasteCode = async () => {
 .start-receiving-container {
     display: flex;
     justify-content: space-between;
+    align-items: start;
 }
 
 .start-receiving-button {

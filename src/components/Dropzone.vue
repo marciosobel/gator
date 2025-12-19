@@ -31,6 +31,7 @@ const handleDragDropEvent = (e: Event<DragDropEvent>) => {
 
     if (e.event === TauriEvent.DRAG_DROP && e.payload.type === "drop") {
         emit("files-dropped", e.payload);
+        hovering.value = false;
     }
 };
 
@@ -47,20 +48,16 @@ onUnmounted(() => {
 
 <template>
     <div @click="openDialog">
-        <label :class="{ hovering }" class="dropzone-area" for="dropzone">
+        <span :class="{ hovering }" class="dropzone-area" for="dropzone">
             <Upload :size="24" />
-            <span>Select file(s) to upload</span>
-        </label>
-
-        <input type="file" id="dropzone" style="display: none" />
+            Select file(s) to upload
+        </span>
     </div>
 </template>
 
 <style scoped>
 .dropzone-area {
     padding: 16px 12px;
-    margin-top: 6%;
-    margin-inline: 10px;
 
     display: flex;
     align-items: center;
