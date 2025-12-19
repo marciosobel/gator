@@ -1,0 +1,4 @@
+**/*.html
+src-tauri/
+**/node_modules
+**/.git

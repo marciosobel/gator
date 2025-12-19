@@ -31,7 +31,8 @@ pub async fn send_files(app: AppHandle, files: Vec<String>) {
             }
             CrocEvent::HashOutput(data) => {
                 tray::set_icon_by_progress(&app, data.progress);
-                app.emit("croc-hash-output", data).unwrap()},
+                app.emit("croc-hash-output", data).unwrap()
+            }
             CrocEvent::Done => {
                 tray::reset_icon(&app);
                 app.emit("croc-done", ()).unwrap();
