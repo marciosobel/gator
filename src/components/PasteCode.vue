@@ -4,7 +4,7 @@ import { ArrowRight, Clipboard, Lightbulb } from "lucide-vue-next";
 import { ref } from "vue";
 
 const props = defineProps<{
-    onReceive: (code: string) => void | Promise<void>;
+    onInsert: (code: string) => void | Promise<void>;
 }>();
 
 const insertedCode = ref("");
@@ -22,7 +22,7 @@ const pasteCode = async () => {
 <template>
     <form
         class="insert-code-container"
-        @submit.prevent="props.onReceive(insertedCode)"
+        @submit.prevent="props.onInsert(insertedCode)"
     >
         <div class="input-container">
             <input

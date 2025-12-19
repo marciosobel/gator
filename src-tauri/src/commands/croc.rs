@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
     config::tray,
@@ -46,15 +46,20 @@ pub async fn send_files(app: AppHandle, files: Vec<String>) {
 #[tauri::command]
 pub async fn receive_files(app: AppHandle, code: String) {
     let mut command = CrocCommand::new();
-    let mut croc = command
-        .no_stdin()
-        .no_stdout()
-        .pipe_stderr()
-        .no_clipboard()
-        .yes()
-        .receive(&code)
-        .spawn()
-        .unwrap();
+
+    let mut path = app
+        .path()
+        .document_dir()
+        .expect("Failed to get document directory");
+    path.push("Gator");
+    path.push("received_files");
+    if !path.exists() {
+        std::fs::create_dir_all(path.clone()).expect("Failed to create directories");
+    }
+
+    command.no_stdin().no_stdout().pipe_stderr().cd(path);
+
+    let mut croc = command.no_clipboard().yes().receive(&code).spawn().unwrap();
 
     let mut events = croc.iter().unwrap();
     while let Some(event) = events.next() {

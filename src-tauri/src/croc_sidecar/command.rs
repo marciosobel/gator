@@ -1,4 +1,7 @@
-use std::process::{Command, Stdio};
+use std::{
+    path::Path,
+    process::{Command, Stdio},
+};
 
 use super::child::CrocChild;
 
@@ -33,6 +36,13 @@ impl CrocCommand {
 
         #[cfg(not(target_os = "windows"))]
         self.inner.env("CROC_SECRET", code);
+
+        self
+    }
+
+    /// Change the command working directory.
+    pub fn cd<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+        self.inner.current_dir(path);
 
         self
     }

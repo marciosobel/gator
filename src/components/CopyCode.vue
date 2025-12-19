@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const uncopy = debounce(() => {
     copied.value = false;
-}, 1000);
+}, 5_000);
 const copyCode = async () => {
     await writeText(props.code);
     copied.value = true;

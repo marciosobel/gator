@@ -6,7 +6,7 @@ import CopyCode from "@/components/CopyCode.vue";
 import PasteCode from "@/components/PasteCode.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { UnlistenFn } from "@tauri-apps/api/event";
-import { Check } from "lucide-vue-next";
+import { Check, LoaderCircle } from "lucide-vue-next";
 import {
     sendFiles,
     listenToCrocEvents,
@@ -20,37 +20,38 @@ enum TransferState {
     HASHING = "hashing",
     TRANSFERRING = "tranfering",
     WAITING = "waiting",
+    LOADING = "loading",
 }
 
 const listeners = ref<UnlistenFn[]>([]);
 const generatedCode = ref("");
-const done = ref(false);
+const isDone = ref(false);
 const state = ref(TransferState.NONE);
-const transferOutput = ref<CrocTransferOutput>();
-const hashOutput = ref<CrocHashOutput>();
+const transferData = ref<CrocTransferOutput>();
+const hashData = ref<CrocHashOutput>();
 
 onMounted(async () => {
     listeners.value = await listenToCrocEvents({
         onCodeGenerated: (generated) => {
-            done.value = false;
+            isDone.value = false;
             generatedCode.value = generated;
             state.value = TransferState.WAITING;
         },
         onHashOutput(data) {
-            done.value = false;
-            hashOutput.value = data;
+            isDone.value = false;
+            hashData.value = data;
             state.value = TransferState.HASHING;
         },
         onTransferOutput: (data) => {
-            done.value = false;
-            transferOutput.value = data;
+            isDone.value = false;
+            transferData.value = data;
             state.value = TransferState.TRANSFERRING;
         },
         onDone: () => {
-            done.value = true;
+            isDone.value = true;
             state.value = TransferState.NONE;
             setTimeout(() => {
-                done.value = false;
+                isDone.value = false;
             }, 10_000);
         },
     });
@@ -61,12 +62,12 @@ onUnmounted(() => {
 });
 
 const onDrop = async (data: DropzonePayload) => {
-    console.log("sending ", data.paths);
+    state.value = TransferState.LOADING;
     await sendFiles(data.paths);
-    console.log("files sent");
 };
 
-const onReceive = async (code: string) => {
+const handleReceive = async (code: string) => {
+    state.value = TransferState.LOADING;
     await receiveFiles(code);
 };
 </script>
@@ -76,34 +77,41 @@ const onReceive = async (code: string) => {
     <main class="main-content">
         <template v-if="state == TransferState.NONE">
             <Dropzone @files-dropped="onDrop" />
-            <PasteCode @receive="onReceive" />
-            <div v-if="done" class="done-message">
+            <PasteCode @insert="handleReceive" />
+            <div v-if="isDone" class="done-message">
                 <Check />
                 <p>File transferred successfully</p>
             </div>
         </template>
 
+        <template v-if="state == TransferState.LOADING">
+            <div class="loading">
+                <LoaderCircle class="animate-spin" />
+                <em>Loading, please wait...</em>
+            </div>
+        </template>
+
         <template v-if="state == TransferState.WAITING">
             <CopyCode :code="generatedCode" />
-            <span style="text-align: center"
-                >Waiting for someone to connect...</span
-            >
+            <span style="text-align: center">
+                Waiting for someone to connect...
+            </span>
         </template>
 
         <template v-if="state == TransferState.TRANSFERRING">
             <div class="transferring-title">
-                <span>Transferring {{ transferOutput!.filename }}</span>
-                <span>{{ transferOutput!.progress }}%</span>
+                <span>Transferring {{ transferData!.filename }}</span>
+                <span>{{ transferData!.progress }}%</span>
             </div>
-            <ProgressBar :progress="transferOutput!.progress" />
+            <ProgressBar :progress="transferData!.progress" />
         </template>
 
         <template v-if="state == TransferState.HASHING">
             <div class="transferring-title">
-                <span>Hashing {{ hashOutput!.filename }}</span>
-                <span>{{ hashOutput!.progress }}%</span>
+                <span>Hashing {{ hashData!.filename }}</span>
+                <span>{{ hashData!.progress }}%</span>
             </div>
-            <ProgressBar :progress="hashOutput!.progress" />
+            <ProgressBar :progress="hashData!.progress" />
         </template>
     </main>
 </template>
@@ -128,7 +136,6 @@ const onReceive = async (code: string) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
     gap: 10px;
 
     width: fit-content;
@@ -141,5 +148,24 @@ const onReceive = async (code: string) => {
 
 .done-message p {
     margin: 0;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.animate-spin {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>
