@@ -54,11 +54,7 @@ jobs:
       - name: install dependencies
         run: pnpm install --prefer-offline
 
-<<<<<<< HEAD
       - uses: tauri-apps/tauri-action@v0
-=======
-      - uses: tauri-apps/tauri-action@v1
->>>>>>> 136dc21 (feat: add `ci` workflow)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
