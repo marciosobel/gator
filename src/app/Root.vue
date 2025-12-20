@@ -63,6 +63,7 @@ body {
 button {
     background: var(--color-bg-weaker);
     transition: background 100ms ease;
+    padding: 8px 10px;
 }
 
 button:hover {

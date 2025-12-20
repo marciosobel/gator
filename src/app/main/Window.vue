@@ -154,6 +154,7 @@ const handleReceive = async (code: string) => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 10px;
 }
 
 .animate-spin {

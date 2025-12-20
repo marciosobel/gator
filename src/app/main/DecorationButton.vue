@@ -43,6 +43,14 @@ const handleClick = () => {
 
 .window-button.close:active {
     background: var(--color-danger-bg-active);
+}
+
+.window-button.close * {
+    transition: color 100ms ease;
+}
+
+.window-button.close.hover *,
+.window-button.close:active * {
     color: var(--color-danger);
 }
 

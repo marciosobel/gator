@@ -117,7 +117,7 @@ const pasteCode = async () => {
 .start-receiving-container {
     display: flex;
     justify-content: space-between;
-    align-items: start;
+    align-items: center;
 }
 
 .start-receiving-button {
