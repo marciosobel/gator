@@ -120,10 +120,10 @@ const handleReceive = async (code: string) => {
 .main-content {
     display: flex;
     flex-direction: column;
-    margin-block: auto;
+    margin: auto;
 
     gap: 10px;
-    margin-inline: 200px;
+    width: min(90dvw, 400px);
 }
 
 .transferring-title {
