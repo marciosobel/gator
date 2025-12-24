@@ -4,7 +4,7 @@ import Actions from "./Actions.vue";
 import PasteCode from "@/components/PasteCode.vue";
 import CopyCode from "@/components/CopyCode.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
-import { Check, LoaderCircle } from "lucide-vue-next";
+import { Check, LoaderCircle, X } from "lucide-vue-next";
 import {
     CrocHashOutput,
     CrocTransferOutput,
@@ -14,6 +14,7 @@ import {
 } from "@/events";
 import { onMounted, onUnmounted, ref } from "vue";
 import { UnlistenFn } from "@tauri-apps/api/event";
+import { killCrocInstance } from "@/events/croc/kill-croc-instance";
 
 enum TransferState {
     NONE = "none",
@@ -29,9 +30,12 @@ const generatedCode = ref("");
 const transferData = ref<CrocTransferOutput>();
 const hashData = ref<CrocHashOutput>();
 const isDone = ref(false);
+const locked = ref(false);
+const instanceId = ref(0);
 
 const onDrop = async (data: DropzonePayload) => {
     state.value = TransferState.LOADING;
+    locked.value = false;
     await sendFiles(data.paths);
 };
 
@@ -40,29 +44,44 @@ const handleReceive = async (code: string) => {
     await receiveFiles(code);
 };
 
+const handleCancel = async () => {
+    if (instanceId.value === 0) return;
+    locked.value = true;
+    await killCrocInstance(instanceId.value);
+    state.value = TransferState.NONE;
+};
+
 onMounted(async () => {
     listeners.value = await listenToCrocEvents({
         onCodeGenerated: (generated) => {
+            if (locked.value) return;
             isDone.value = false;
             generatedCode.value = generated;
             state.value = TransferState.WAITING;
         },
         onHashOutput(data) {
+            if (locked.value) return;
             isDone.value = false;
             hashData.value = data;
             state.value = TransferState.HASHING;
         },
         onTransferOutput: (data) => {
+            if (locked.value) return;
             isDone.value = false;
             transferData.value = data;
             state.value = TransferState.TRANSFERRING;
         },
         onDone: () => {
+            if (locked.value) return;
             isDone.value = true;
             state.value = TransferState.NONE;
             setTimeout(() => {
                 isDone.value = false;
             }, 5_000);
+        },
+        onInstanceCreated: (id) => {
+            if (locked.value) return;
+            instanceId.value = id;
         },
     });
 });
@@ -114,6 +133,15 @@ onUnmounted(() => {
                 </div>
                 <ProgressBar :progress="hashData!.progress" />
             </template>
+
+            <button
+                v-if="state != TransferState.NONE"
+                @click="handleCancel"
+                class="cancel-button"
+                :disabled="locked"
+            >
+                <X />Cancel
+            </button>
         </div>
         <Actions />
     </main>
@@ -171,16 +199,12 @@ onUnmounted(() => {
     margin-block: auto;
 }
 
-.animate-spin {
-    animation: spin 1.5s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.cancel-button {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    gap: 10px;
+    width: fit-content;
+    cursor: pointer;
 }
 </style>

@@ -64,6 +64,7 @@ button {
     background: var(--color-bg-weaker);
     transition: background 100ms ease;
     padding: 8px 10px;
+    border-radius: var(--border-radius);
 }
 
 button:hover {
@@ -78,5 +79,18 @@ ul {
     padding: 0;
     margin: 0;
     list-style-type: none;
+}
+
+.animate-spin {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>

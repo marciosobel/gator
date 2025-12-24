@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -35,4 +37,17 @@ pub struct CrocHashOutput {
     pub time_remaining: usize,
     pub filename: String,
     pub raw_message: String,
+}
+
+impl Display for CrocEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CrocEvent::TransferOutput(_) => write!(f, "TransferOutput"),
+            CrocEvent::HashOutput(_) => write!(f, "HashOutput"),
+            CrocEvent::CodeGenerated(_) => write!(f, "CodeGenerated"),
+            CrocEvent::Done => write!(f, "Done"),
+            CrocEvent::Unknown(line) => write!(f, "Unknown: {}", line),
+            CrocEvent::EOF => write!(f, "EOF"),
+        }
+    }
 }
