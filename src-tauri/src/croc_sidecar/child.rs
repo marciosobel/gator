@@ -21,4 +21,14 @@ impl CrocChild {
     pub fn take_stderr(&mut self) -> Option<ChildStderr> {
         self.inner.stderr.take()
     }
+
+    /// Tries to kill self.
+    pub fn kill(&mut self) -> Result<(), std::io::Error> {
+        self.inner.kill()
+    }
+
+    /// Gets the running child ID.
+    pub fn id(&self) -> u32 {
+        self.inner.id()
+    }
 }

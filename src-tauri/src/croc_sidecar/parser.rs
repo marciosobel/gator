@@ -23,7 +23,7 @@ impl<R: Read> CrocParser<R> {
         let line = line_cow.trim();
 
         match bytes_read {
-            0 => Some(CrocEvent::EOF),
+            0 => Some(CrocEvent::Done),
             _ => {
                 if let Some(code) = try_parse_code(line) {
                     return Some(CrocEvent::CodeGenerated(code));
@@ -34,9 +34,6 @@ impl<R: Read> CrocParser<R> {
                 }
 
                 if let Some(data) = try_parse_tranferring(line) {
-                    if data.progress == 100 {
-                        return Some(CrocEvent::Done);
-                    }
                     return Some(CrocEvent::TransferOutput(data));
                 }
 
@@ -79,6 +76,10 @@ fn try_parse_hashing(raw: &str) -> Option<CrocHashOutput> {
 }
 
 fn try_parse_tranferring(raw: &str) -> Option<CrocTransferOutput> {
+    if raw.is_empty() {
+        return None;
+    }
+
     let percent_pos = raw.rfind('%')?;
     let space_before_percent = raw[..percent_pos].rfind(' ')?;
     let after_percent = &raw[percent_pos + 1..];
@@ -141,7 +142,7 @@ fn unit_to_bytes(value: f64, unit: &str) -> Option<usize> {
 }
 
 fn parse_size(s: &str) -> Option<(usize, usize)> {
-    // Format: "{sent}/{total} {unit}"
+    // Format: "{sent} {unit}/{total} {unit}"
     let mut size_iter = s.split('/');
     let sent = size_iter.next()?.trim();
     let total = size_iter.next()?.trim();
@@ -149,11 +150,20 @@ fn parse_size(s: &str) -> Option<(usize, usize)> {
     // Separate numeric value from unit on the total side.
     let mut total_iter = total.split_whitespace();
     let total = total_iter.next()?;
-    let unit = total_iter.next()?;
+    let total_unit = total_iter.next()?;
+
+    let mut sent_iter = sent.split_whitespace();
+    let sent = sent_iter.next()?;
+    // its possible that the sent unit is omitted,
+    // if it is, its the same as the total unit.
+    let sent_unit = match sent_iter.next() {
+        None => total_unit,
+        Some(unit) => unit,
+    };
 
     // Both numbers share the same unit.
-    let sent = get_size_number(sent, unit)?;
-    let total = get_size_number(total, unit)?;
+    let sent = get_size_number(sent, sent_unit)?;
+    let total = get_size_number(total, total_unit)?;
 
     Some((sent, total))
 }

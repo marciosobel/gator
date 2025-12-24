@@ -1,14 +1,17 @@
 use tauri::App;
 
+mod app;
 mod commands;
 mod config;
 mod croc_sidecar;
 mod utils;
 
 use commands::{
-    croc::{receive_files, send_files},
+    croc::{kill_croc_instance, receive_files, send_files},
     window::{close_tray, close_window, open_window},
 };
+
+use crate::app::Gator;
 
 pub type SetupResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 
@@ -25,6 +28,7 @@ pub fn run() {
             close_tray,
             send_files,
             receive_files,
+            kill_croc_instance,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -33,6 +37,8 @@ pub fn run() {
 fn setup(app: &mut App) -> SetupResult {
     #[cfg(desktop)]
     config::setup_tray(app)?;
+
+    Gator::setup(app);
 
     Ok(())
 }

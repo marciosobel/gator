@@ -7,6 +7,7 @@ export enum CrocEvent {
   Done = "croc-done",
   Unknown = "croc-unknown",
   Error = "croc-error",
+  InstanceCreated = "croc-instance-created",
 }
 
 export async function listenToCrocEvents(
@@ -27,6 +28,9 @@ export async function listenToCrocEvents(
       handlers.onUnknown?.(event.payload),
     ),
     listen<void>(CrocEvent.Error, () => handlers.onError?.()),
+    listen<number>(CrocEvent.InstanceCreated, (event) =>
+      handlers.onInstanceCreated?.(event.payload),
+    ),
   ]);
 }
 
@@ -37,6 +41,7 @@ interface CrocEventHandlers {
   onDone?: () => MaybePromise<unknown>;
   onUnknown?: (rawLine: string) => MaybePromise<unknown>;
   onError?: () => MaybePromise<unknown>;
+  onInstanceCreated?: (id: number) => MaybePromise<unknown>;
 }
 
 export interface CrocTransferOutput {

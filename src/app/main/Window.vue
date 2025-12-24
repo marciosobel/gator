@@ -6,7 +6,7 @@ import CopyCode from "@/components/CopyCode.vue";
 import PasteCode from "@/components/PasteCode.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { UnlistenFn } from "@tauri-apps/api/event";
-import { Check, LoaderCircle } from "lucide-vue-next";
+import { Check, LoaderCircle, X } from "lucide-vue-next";
 import {
     sendFiles,
     listenToCrocEvents,
@@ -14,6 +14,7 @@ import {
     receiveFiles,
     CrocHashOutput,
 } from "@/events";
+import { killCrocInstance } from "@/events/croc/kill-croc-instance";
 
 enum TransferState {
     NONE = "none",
@@ -29,30 +30,40 @@ const isDone = ref(false);
 const state = ref(TransferState.NONE);
 const transferData = ref<CrocTransferOutput>();
 const hashData = ref<CrocHashOutput>();
+const locked = ref(true);
+const instanceId = ref(0);
 
 onMounted(async () => {
     listeners.value = await listenToCrocEvents({
         onCodeGenerated: (generated) => {
+            if (locked.value) return;
             isDone.value = false;
             generatedCode.value = generated;
             state.value = TransferState.WAITING;
         },
         onHashOutput(data) {
+            if (locked.value) return;
             isDone.value = false;
             hashData.value = data;
             state.value = TransferState.HASHING;
         },
         onTransferOutput: (data) => {
+            if (locked.value) return;
             isDone.value = false;
             transferData.value = data;
             state.value = TransferState.TRANSFERRING;
         },
         onDone: () => {
+            if (locked.value) return;
             isDone.value = true;
             state.value = TransferState.NONE;
             setTimeout(() => {
                 isDone.value = false;
             }, 10_000);
+        },
+        onInstanceCreated: (id) => {
+            if (locked.value) return;
+            instanceId.value = id;
         },
     });
 });
@@ -62,6 +73,7 @@ onUnmounted(() => {
 });
 
 const onDrop = async (data: DropzonePayload) => {
+    locked.value = false;
     state.value = TransferState.LOADING;
     await sendFiles(data.paths);
 };
@@ -69,6 +81,13 @@ const onDrop = async (data: DropzonePayload) => {
 const handleReceive = async (code: string) => {
     state.value = TransferState.LOADING;
     await receiveFiles(code);
+};
+
+const handleCancel = async () => {
+    if (instanceId.value === 0) return;
+    locked.value = true;
+    await killCrocInstance(instanceId.value);
+    state.value = TransferState.NONE;
 };
 </script>
 
@@ -113,6 +132,14 @@ const handleReceive = async (code: string) => {
             </div>
             <ProgressBar :progress="hashData!.progress" />
         </template>
+        <button
+            v-if="state != TransferState.NONE"
+            @click="handleCancel"
+            class="cancel-button"
+            :disabled="locked"
+        >
+            <X />Cancel
+        </button>
     </main>
 </template>
 
@@ -157,16 +184,12 @@ const handleReceive = async (code: string) => {
     gap: 10px;
 }
 
-.animate-spin {
-    animation: spin 1.5s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.cancel-button {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    gap: 10px;
+    width: fit-content;
+    cursor: pointer;
 }
 </style>
