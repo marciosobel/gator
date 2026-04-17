@@ -1,65 +1,88 @@
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 export enum CrocEvent {
-  TransferOutput = "croc-transfer-output",
-  HashOutput = "croc-hash-output",
-  CodeGenerated = "croc-code-generated",
-  Done = "croc-done",
-  Unknown = "croc-unknown",
-  Error = "croc-error",
-  InstanceCreated = "croc-instance-created",
+  HASHING = "croc-hashing",
+  SENDING_INFO = "croc-sending-info",
+  RECEIVING_INFO = "croc-receiving-info",
+  CODE_GENERATED = "croc-code-generated",
+  SENDING_TO = "croc-sending-to",
+  RECEIVING_FROM = "croc-receiving-from",
+  SENDING = "croc-sending",
+  RECEIVING = "croc-receiving",
+  DONE = "croc-done",
+  UNKNOWN = "croc-unknown",
+  EOF = "croc-eof",
+  INSTANCE_CREATED = "croc-instance-created",
 }
 
 export async function listenToCrocEvents(
   handlers: CrocEventHandlers,
 ): Promise<UnlistenFn[]> {
   return await Promise.all([
-    listen<CrocTransferOutput>(CrocEvent.TransferOutput, (event) =>
-      handlers.onTransferOutput?.(event.payload),
+    listen<Progress>(CrocEvent.HASHING, (event) =>
+      handlers.onHashing?.(event.payload),
     ),
-    listen<CrocHashOutput>(CrocEvent.HashOutput, (event) =>
-      handlers.onHashOutput?.(event.payload),
+    listen<Progress>(CrocEvent.SENDING, (event) =>
+      handlers.onSending?.(event.payload),
     ),
-    listen<string>(CrocEvent.CodeGenerated, (event) =>
+    listen<Progress>(CrocEvent.RECEIVING, (event) =>
+      handlers.onReceiving?.(event.payload),
+    ),
+    listen<Relay>(CrocEvent.RECEIVING_FROM, (event) =>
+      handlers.onReceivingFrom?.(event.payload),
+    ),
+    listen<Relay>(CrocEvent.SENDING_TO, (event) =>
+      handlers.onSendingTo?.(event.payload),
+    ),
+    listen<FileInfo>(CrocEvent.SENDING_INFO, (event) =>
+      handlers.onSendingInfo?.(event.payload),
+    ),
+    listen<FileInfo>(CrocEvent.RECEIVING_INFO, (event) =>
+      handlers.onReceivingInfo?.(event.payload),
+    ),
+    listen<string>(CrocEvent.CODE_GENERATED, (event) =>
       handlers.onCodeGenerated?.(event.payload),
     ),
-    listen<void>(CrocEvent.Done, () => handlers.onDone?.()),
-    listen<string>(CrocEvent.Unknown, (event) =>
+    listen(CrocEvent.DONE, () => handlers.onDone?.()),
+    listen<string>(CrocEvent.UNKNOWN, (event) =>
       handlers.onUnknown?.(event.payload),
     ),
-    listen<void>(CrocEvent.Error, () => handlers.onError?.()),
-    listen<number>(CrocEvent.InstanceCreated, (event) =>
+    listen(CrocEvent.EOF, () => handlers.onError?.()),
+    listen<number>(CrocEvent.INSTANCE_CREATED, (event) =>
       handlers.onInstanceCreated?.(event.payload),
     ),
   ]);
 }
 
 interface CrocEventHandlers {
-  onTransferOutput?: (data: CrocTransferOutput) => MaybePromise<unknown>;
-  onHashOutput?: (data: CrocHashOutput) => MaybePromise<unknown>;
+  onHashing?: (progress: Progress) => MaybePromise<unknown>;
+  onSending?: (progress: Progress) => MaybePromise<unknown>;
+  onReceiving?: (progress: Progress) => MaybePromise<unknown>;
+  onReceivingFrom?: (relay: Relay) => MaybePromise<unknown>;
+  onSendingTo?: (relay: Relay) => MaybePromise<unknown>;
+  onSendingInfo?: (info: FileInfo) => MaybePromise<unknown>;
+  onReceivingInfo?: (info: FileInfo) => MaybePromise<unknown>;
   onCodeGenerated?: (code: string) => MaybePromise<unknown>;
   onDone?: () => MaybePromise<unknown>;
   onUnknown?: (rawLine: string) => MaybePromise<unknown>;
   onError?: () => MaybePromise<unknown>;
-  onInstanceCreated?: (id: number) => MaybePromise<unknown>;
+  onInstanceCreated?: (pid: number) => MaybePromise<unknown>;
 }
 
-export interface CrocTransferOutput {
-  progress: number;
-  total_size: number;
-  total_sent: number;
-  speed: number;
-  time_spent?: number;
-  time_remaining?: number;
-  filename: string;
-  raw_message: string;
+export interface Progress {
+  fileName: string;
+  percentage: number;
+  bytesSent?: number;
+  bytesTotal?: number;
+  speed?: number;
 }
 
-export interface CrocHashOutput {
-  progress: number;
-  speed: number;
-  time_spent: number;
-  time_remaining: number;
-  filename: string;
-  raw_message: string;
+export interface FileInfo {
+  name: string;
+  size: number;
+}
+
+export interface Relay {
+  address: string;
+  port: number;
 }

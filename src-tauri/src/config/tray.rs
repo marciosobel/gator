@@ -107,7 +107,8 @@ pub fn try_hide(handle: &AppHandle) {
     }
 }
 
-pub fn get_icon(handle: &AppHandle) -> Option<TrayIcon> {
+/// Gets the current tray.
+pub fn get_tray(handle: &AppHandle) -> Option<TrayIcon> {
     if let Some(tray) = handle.tray_by_id(ICON_ID) {
         Some(tray)
     } else {
@@ -116,20 +117,23 @@ pub fn get_icon(handle: &AppHandle) -> Option<TrayIcon> {
     }
 }
 
+/// Resets the icon to it's default.
 pub fn reset_icon(handle: &AppHandle) {
-    if let Some(tray) = get_icon(handle) {
+    if let Some(tray) = get_tray(handle) {
         set_icon(&tray, Icon::Default);
     }
 }
 
+/// Updates the tray icon.
 fn set_icon(tray: &TrayIcon, icon: Icon) {
     if let Err(e) = tray.set_icon(Some(icon.into())) {
         eprintln!("Unable to set tray icon: {}", e);
     }
 }
 
-pub fn set_icon_by_progress(handle: &AppHandle, progress: u8) {
-    if let Some(tray) = get_icon(handle) {
+/// Sets the tray icon based on the given progress percentage (between 0 and 100). Default icon will be set otherwise.
+pub fn set_icon_progress(handle: &AppHandle, progress: u8) {
+    if let Some(tray) = get_tray(handle) {
         let icon = match progress {
             p if p <= 10 => Icon::Progress0,
             p if p <= 20 => Icon::Progress1,

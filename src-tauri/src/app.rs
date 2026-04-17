@@ -1,8 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, sync::Mutex};
 
+use croc_sidecar::child::CrocChild;
 use tauri::{App, AppHandle, Manager};
-
-use crate::croc_sidecar::CrocChild;
 
 pub struct Gator {
     pub croc_instances: HashMap<u32, CrocChild>,
@@ -21,20 +20,21 @@ impl Gator {
     }
 
     /// Returns `Self` from the current app state.
-    /// If using in the middle of a function, remember to
-    /// call `drop` in order to unlock the inner mutex.
     pub fn get_state(handle: &AppHandle) -> tauri::State<'_, Mutex<Self>> {
         handle.state::<Mutex<Self>>()
     }
 
     /// Inserts a croc instance to the hashmap.
     pub fn insert_croc_instance(handle: &AppHandle, child: CrocChild) {
-        let id = child.id();
+        let Some(id) = child.id() else {
+            return;
+        };
         let state = Gator::get_state(&handle);
         let mut state = state.lock().expect("Failed to lock app mutex");
         state.croc_instances.insert(id, child);
     }
 
+    /// Checks if a croc instance exists in the hashmap.
     pub fn has_croc_instance(handle: &AppHandle, id: u32) -> bool {
         let state = Gator::get_state(&handle);
         let state = state.lock().expect("Failed to lock app mutex");
@@ -49,14 +49,13 @@ impl Gator {
     }
 
     /// Returns the default directory to save files
-    pub fn file_store_path(handle: &AppHandle) -> PathBuf {
+    pub fn default_receive_filepath(handle: &AppHandle) -> PathBuf {
         let mut path = handle
             .path()
             .document_dir()
             .expect("Failed to get document directory");
 
-        path.push("Gator");
-        path.push("received_files");
+        path.push("gator");
         if !path.exists() {
             std::fs::create_dir_all(path.clone()).expect("Failed to create directories");
         }

@@ -1,39 +1,39 @@
+use croc_sidecar::{Croc, CrocEvent};
+use futures_util::StreamExt;
 use tauri::{AppHandle, Emitter};
 
-use crate::{app::Gator, config::tray, croc_sidecar::{CrocCommand, CrocEvent}};
+use crate::{app::Gator, config::tray};
 
 #[tauri::command]
 pub async fn send_files(app: AppHandle, files: Vec<String>) {
-    let mut command = CrocCommand::new();
-    let mut croc = command
-        .no_stdin()
-        .no_stdout()
-        .pipe_stderr()
-        .no_clipboard()
-        .yes()
-        .send(&files)
+    let mut croc = Croc::new()
+        .clipboard(false)
+        .send()
+        .files(files)
         .spawn()
-        .unwrap();
+        .expect("Failed to spawn croc instance");
 
-    let id = croc.id();
-    let mut events = croc.iter().unwrap();
+    let id = croc.id().expect("Failed to get `croc` PID");
+    let mut events = croc.events().expect("Failed to create croc event stream");
+
     Gator::insert_croc_instance(&app, croc);
-
     app.emit("croc-instance-created", id).unwrap();
 
-    while let Some(event) = events.next() {
+    while let Some(event) = events.next().await {
         match event {
             CrocEvent::CodeGenerated(code) => {
                 tray::reset_icon(&app);
                 app.emit("croc-code-generated", code).unwrap();
             }
-            CrocEvent::TransferOutput(data) => {
-                tray::set_icon_by_progress(&app, data.progress);
-                app.emit("croc-transfer-output", data).unwrap();
+            CrocEvent::Hashing(progress) => {
+                tray::set_icon_progress(&app, progress.percentage);
+                app.emit("croc-hashing", progress).unwrap();
             }
-            CrocEvent::HashOutput(data) => {
-                tray::set_icon_by_progress(&app, data.progress);
-                app.emit("croc-hash-output", data).unwrap()
+            CrocEvent::SendingInfo(info) => app.emit("croc-sending-info", info).unwrap(),
+            CrocEvent::SendingTo(relay) => app.emit("croc-sending-to", relay).unwrap(),
+            CrocEvent::Sending(progress) => {
+                tray::set_icon_progress(&app, progress.percentage);
+                app.emit("croc-sending", progress).unwrap();
             }
             CrocEvent::Done => {
                 tray::reset_icon(&app);
@@ -41,8 +41,9 @@ pub async fn send_files(app: AppHandle, files: Vec<String>) {
                     app.emit("croc-done", ()).unwrap();
                 }
             }
-            CrocEvent::Unknown(raw_line) => app.emit("croc-unknown", raw_line).unwrap(),
+            CrocEvent::Unknown(raw) => app.emit("croc-unknown", raw).unwrap(),
             CrocEvent::EOF => app.emit("croc-eof", ()).unwrap(),
+            _ => unreachable!("Received event that should only be received in `receive` context."),
         }
     }
 

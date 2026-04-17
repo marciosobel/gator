@@ -3,7 +3,6 @@ use tauri::App;
 mod app;
 mod commands;
 mod config;
-mod croc_sidecar;
 mod utils;
 
 use commands::{

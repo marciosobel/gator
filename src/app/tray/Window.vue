@@ -6,9 +6,8 @@ import CopyCode from "@/components/CopyCode.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { Check, LoaderCircle, X } from "lucide-vue-next";
 import {
-    CrocHashOutput,
-    CrocTransferOutput,
     listenToCrocEvents,
+    Progress,
     receiveFiles,
     sendFiles,
 } from "@/events";
@@ -16,26 +15,61 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { killCrocInstance } from "@/events/croc/kill-croc-instance";
 
+/** a state representing which point of the file transfer we are */
 enum TransferState {
+    /** app is in idle state waiting for user to choose between receiving a file or sending one */
     NONE = "none",
+    /** `croc` is hashing the file to send it */
     HASHING = "hashing",
+    /** a transference is currently active */
     TRANSFERRING = "tranfering",
-    WAITING = "waiting",
+    /** app is waiting for someone to connect in order to send files */
+    WAITING_FOR_CONNECTION = "waiting",
+    /** the app is waiting for the croc instance to be created */
     LOADING = "loading",
 }
 
 const listeners = ref<UnlistenFn[]>([]);
-const state = ref<TransferState>(TransferState.NONE);
-const generatedCode = ref("");
-const transferData = ref<CrocTransferOutput>();
-const hashData = ref<CrocHashOutput>();
-const isDone = ref(false);
-const locked = ref(false);
-const instanceId = ref(0);
+const code = ref("");
+const transferComplete = ref(false);
+const state = ref(TransferState.NONE);
+const progress = ref<Progress>();
+const crocPID = ref<number>();
+
+onMounted(async () => {
+    listeners.value = await listenToCrocEvents({
+        onCodeGenerated: (c) => {
+            code.value = c;
+            state.value = TransferState.WAITING_FOR_CONNECTION;
+        },
+        onHashing: (newProgress) => {
+            progress.value = newProgress;
+            transferComplete.value = false;
+            state.value = TransferState.HASHING;
+        },
+        onSending: (newProgress) => {
+            progress.value = newProgress;
+            state.value = TransferState.TRANSFERRING;
+        },
+        onDone: () => {
+            transferComplete.value = true;
+            state.value = TransferState.NONE;
+            setTimeout(() => {
+                transferComplete.value = false;
+            }, 10_000);
+        },
+        onInstanceCreated(pid) {
+            crocPID.value = pid;
+        },
+    });
+});
+
+onUnmounted(() => {
+    listeners.value.forEach((unlisten) => unlisten());
+});
 
 const onDrop = async (data: DropzonePayload) => {
     state.value = TransferState.LOADING;
-    locked.value = false;
     await sendFiles(data.paths);
 };
 
@@ -45,50 +79,15 @@ const handleReceive = async (code: string) => {
 };
 
 const handleCancel = async () => {
-    if (instanceId.value === 0) return;
-    locked.value = true;
-    await killCrocInstance(instanceId.value);
+    state.value = TransferState.LOADING;
+
+    if (crocPID.value !== undefined) {
+        await killCrocInstance(crocPID.value);
+        crocPID.value = undefined;
+    }
+
     state.value = TransferState.NONE;
 };
-
-onMounted(async () => {
-    listeners.value = await listenToCrocEvents({
-        onCodeGenerated: (generated) => {
-            if (locked.value) return;
-            isDone.value = false;
-            generatedCode.value = generated;
-            state.value = TransferState.WAITING;
-        },
-        onHashOutput(data) {
-            if (locked.value) return;
-            isDone.value = false;
-            hashData.value = data;
-            state.value = TransferState.HASHING;
-        },
-        onTransferOutput: (data) => {
-            if (locked.value) return;
-            isDone.value = false;
-            transferData.value = data;
-            state.value = TransferState.TRANSFERRING;
-        },
-        onDone: () => {
-            if (locked.value) return;
-            isDone.value = true;
-            state.value = TransferState.NONE;
-            setTimeout(() => {
-                isDone.value = false;
-            }, 5_000);
-        },
-        onInstanceCreated: (id) => {
-            if (locked.value) return;
-            instanceId.value = id;
-        },
-    });
-});
-
-onUnmounted(() => {
-    listeners.value.forEach((unlisten) => unlisten());
-});
 </script>
 
 <template>
@@ -98,7 +97,7 @@ onUnmounted(() => {
                 <Dropzone @files-dropped="onDrop" />
                 <PasteCode @insert="handleReceive" />
 
-                <div v-if="isDone" class="done-message">
+                <div v-if="transferComplete" class="done-message">
                     <Check :size="16" />
                     <p>File transferred successfully</p>
                 </div>
@@ -111,8 +110,8 @@ onUnmounted(() => {
                 </div>
             </template>
 
-            <template v-if="state == TransferState.WAITING">
-                <CopyCode :code="generatedCode" full-width small-text />
+            <template v-if="state == TransferState.WAITING_FOR_CONNECTION">
+                <CopyCode :code="code" full-width small-text />
                 <span style="text-align: center">
                     Waiting for someone to connect...
                 </span>
@@ -120,25 +119,24 @@ onUnmounted(() => {
 
             <template v-if="state == TransferState.TRANSFERRING">
                 <div class="transferring-title">
-                    <span>Transferring {{ transferData!.filename }}</span>
-                    <span>{{ transferData!.progress }}%</span>
+                    <span>Transferring {{ progress!.fileName }}</span>
+                    <span>{{ progress!.percentage }}%</span>
                 </div>
-                <ProgressBar :progress="transferData!.progress" />
+                <ProgressBar :progress="progress!.percentage" />
             </template>
 
             <template v-if="state == TransferState.HASHING">
                 <div class="transferring-title">
-                    <span>Hashing {{ hashData!.filename }}</span>
-                    <span>{{ hashData!.progress }}%</span>
+                    <span>Hashing {{ progress!.fileName }}</span>
+                    <span>{{ progress!.percentage }}%</span>
                 </div>
-                <ProgressBar :progress="hashData!.progress" />
+                <ProgressBar :progress="progress!.percentage" />
             </template>
 
             <button
                 v-if="state != TransferState.NONE"
                 @click="handleCancel"
                 class="cancel-button"
-                :disabled="locked"
             >
                 <X />Cancel
             </button>
