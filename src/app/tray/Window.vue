@@ -5,139 +5,72 @@ import PasteCode from "@/components/PasteCode.vue";
 import CopyCode from "@/components/CopyCode.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { Check, LoaderCircle, X } from "lucide-vue-next";
-import {
-    listenToCrocEvents,
-    Progress,
-    receiveFiles,
-    sendFiles,
-} from "@/events";
-import { onMounted, onUnmounted, ref } from "vue";
-import { UnlistenFn } from "@tauri-apps/api/event";
-import { killCrocInstance } from "@/events/croc/kill-croc-instance";
-
-/** a state representing which point of the file transfer we are */
-enum TransferState {
-    /** app is in idle state waiting for user to choose between receiving a file or sending one */
-    NONE = "none",
-    /** `croc` is hashing the file to send it */
-    HASHING = "hashing",
-    /** a transference is currently active */
-    TRANSFERRING = "tranfering",
-    /** app is waiting for someone to connect in order to send files */
-    WAITING_FOR_CONNECTION = "waiting",
-    /** the app is waiting for the croc instance to be created */
-    LOADING = "loading",
-}
-
-const listeners = ref<UnlistenFn[]>([]);
-const code = ref("");
-const transferComplete = ref(false);
-const state = ref(TransferState.NONE);
-const progress = ref<Progress>();
-const crocPID = ref<number>();
+import { onMounted, onUnmounted } from "vue";
+import { croc, TransferState } from "@/croc";
 
 onMounted(async () => {
-    listeners.value = await listenToCrocEvents({
-        onCodeGenerated: (c) => {
-            code.value = c;
-            state.value = TransferState.WAITING_FOR_CONNECTION;
-        },
-        onHashing: (newProgress) => {
-            progress.value = newProgress;
-            transferComplete.value = false;
-            state.value = TransferState.HASHING;
-        },
-        onSending: (newProgress) => {
-            progress.value = newProgress;
-            state.value = TransferState.TRANSFERRING;
-        },
-        onDone: () => {
-            transferComplete.value = true;
-            state.value = TransferState.NONE;
-            setTimeout(() => {
-                transferComplete.value = false;
-            }, 10_000);
-        },
-        onInstanceCreated(pid) {
-            crocPID.value = pid;
-        },
-    });
+    await croc.subscribe();
 });
 
 onUnmounted(() => {
-    listeners.value.forEach((unlisten) => unlisten());
+    croc.unsubscribe();
 });
 
 const onDrop = async (data: DropzonePayload) => {
-    state.value = TransferState.LOADING;
-    await sendFiles(data.paths);
+    await croc.sendFiles(data.paths);
 };
 
 const handleReceive = async (code: string) => {
-    state.value = TransferState.LOADING;
-    await receiveFiles(code);
+    await croc.receiveFiles(code);
 };
 
 const handleCancel = async () => {
-    state.value = TransferState.LOADING;
-
-    if (crocPID.value !== undefined) {
-        await killCrocInstance(crocPID.value);
-        crocPID.value = undefined;
-    }
-
-    state.value = TransferState.NONE;
+    await croc.kill();
 };
 </script>
 
 <template>
     <main class="main-wrapper">
         <div class="main-content">
-            <template v-if="state == TransferState.NONE">
+            <template v-if="croc.meta.state == TransferState.NONE">
                 <Dropzone @files-dropped="onDrop" />
                 <PasteCode @insert="handleReceive" />
 
-                <div v-if="transferComplete" class="done-message">
+                <div v-if="croc.done" class="done-message">
                     <Check :size="16" />
                     <p>File transferred successfully</p>
                 </div>
             </template>
 
-            <template v-if="state == TransferState.LOADING">
+            <template v-if="croc.meta.state == TransferState.LOADING">
                 <div class="loading">
                     <LoaderCircle class="animate-spin" />
                     <em>Loading, please wait...</em>
                 </div>
             </template>
 
-            <template v-if="state == TransferState.WAITING_FOR_CONNECTION">
-                <CopyCode :code="code" full-width small-text />
-                <span style="text-align: center">
-                    Waiting for someone to connect...
-                </span>
+            <template v-if="croc.meta.state == TransferState.WAITING_FOR_CONNECTION">
+                <CopyCode :code="croc.meta.code" full-width small-text />
+                <span style="text-align: center"> Waiting for someone to connect... </span>
             </template>
 
-            <template v-if="state == TransferState.TRANSFERRING">
+            <template v-if="croc.meta.state == TransferState.TRANSFERRING">
                 <div class="transferring-title">
-                    <span>Transferring {{ progress!.fileName }}</span>
-                    <span>{{ progress!.percentage }}%</span>
+                    <span>Transferring {{ croc.meta.progress.fileName }}</span>
+                    <span>{{ croc.meta.progress.percentage }}%</span>
                 </div>
-                <ProgressBar :progress="progress!.percentage" />
+                <ProgressBar :progress="croc.meta.progress.percentage" />
             </template>
 
-            <template v-if="state == TransferState.HASHING">
+            <template v-if="croc.meta.state == TransferState.HASHING">
                 <div class="transferring-title">
-                    <span>Hashing {{ progress!.fileName }}</span>
-                    <span>{{ progress!.percentage }}%</span>
+                    <span>Hashing {{ croc.meta.progress.fileName }}</span>
+                    <span>{{ croc.meta.progress.percentage }}%</span>
                 </div>
-                <ProgressBar :progress="progress!.percentage" />
+                <ProgressBar :progress="croc.meta.progress.percentage" />
             </template>
 
-            <button
-                v-if="state != TransferState.NONE"
-                @click="handleCancel"
-                class="cancel-button"
-            >
+            <button v-if="croc.meta.state != TransferState.NONE" @click="handleCancel" class="cancel-button">
                 <X />Cancel
             </button>
         </div>

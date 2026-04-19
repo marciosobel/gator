@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { closeTray, openMainWindow } from "@/events";
+import { closeTray, openMainWindow } from "@/commands";
 import { LucideIcon, Maximize2, X } from "lucide-vue-next";
 import { ref } from "vue";
 
@@ -26,12 +26,7 @@ const buttons = ref<MenuButton[]>([
 
 <template>
     <div class="menu-actions-container">
-        <button
-            v-for="button in buttons"
-            class="menu-button"
-            @click="button.action"
-            :key="button.text"
-        >
+        <button v-for="button in buttons" class="menu-button" @click="button.action" :key="button.text">
             <component v-if="button.icon" :is="button.icon" :size="20" />
             <span>{{ button.text }}</span>
             <span v-if="button.accelerator">{{ button.accelerator }}</span>

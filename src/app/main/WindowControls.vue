@@ -2,7 +2,7 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Minus, Square, X } from "lucide-vue-next";
 import DecorationButton from "./DecorationButton.vue";
-import { closeMainWindow } from "@/events/main-window";
+import { closeMainWindow } from "@/commands";
 
 const window = getCurrentWebviewWindow();
 

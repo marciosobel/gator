@@ -25,7 +25,7 @@ pub async fn receive_files(app: AppHandle, code: String) {
             CrocEvent::ReceivingFrom(relay) => app.emit("croc-receiving-from", relay).unwrap(),
             CrocEvent::Receiving(progress) => {
                 tray::set_icon_progress(&app, progress.percentage);
-                app.emit("croc-transfer-output", progress).unwrap();
+                app.emit("croc-receiving", progress).unwrap();
             }
             CrocEvent::Done => {
                 tray::reset_icon(&app);
