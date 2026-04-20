@@ -27,6 +27,8 @@
             clippy
             pnpm
             vtsls
+            prettierd
+            eslint
           ];
 
           buildInputs = with pkgs; [
