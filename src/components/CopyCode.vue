@@ -26,16 +26,8 @@ const copyCode = async () => {
         <span class="code-message">Code generated</span>
         <div class="copy-code-box" :class="{ copied, fullWidth }">
             <span v-if="copied" class="copy-code-copied-message">Copied!</span>
-            <span
-                :class="{ copied, fullWidth, smallText }"
-                class="copy-code-code"
-                >{{ props.code }}</span
-            >
-            <button
-                :class="{ copied }"
-                class="copy-code-button"
-                @click="copyCode"
-            >
+            <span :class="{ copied, fullWidth, smallText }" class="copy-code-code">{{ props.code }}</span>
+            <button :class="{ copied }" class="copy-code-button" @click="copyCode">
                 <Check v-if="copied" :size="20" />
                 <Copy v-else :size="20" />
             </button>
@@ -72,6 +64,7 @@ const copyCode = async () => {
 .copy-code-code {
     letter-spacing: 3px;
     text-wrap: nowrap;
+    padding-left: 5px;
 }
 
 .copy-code-code.smallText {
