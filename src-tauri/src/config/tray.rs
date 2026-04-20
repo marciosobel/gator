@@ -1,9 +1,9 @@
-use crate::{config::main_window, utils::window, SetupResult};
+use crate::{SetupResult, config::main_window, utils::window};
 use tauri::{
+    App, AppHandle, Manager, WebviewWindow, Wry,
     image::Image,
     menu::{Menu, MenuEvent, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    App, AppHandle, Manager, WebviewWindow, Wry,
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 

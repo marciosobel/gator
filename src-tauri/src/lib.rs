@@ -1,4 +1,4 @@
-use tauri::App;
+use tauri::{App, WindowEvent};
 
 mod app;
 mod commands;
@@ -29,6 +29,15 @@ pub fn run() {
             receive_files,
             kill_croc_instance,
         ])
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                window.hide().expect(&format!(
+                    "failed to close window with label {}",
+                    window.label()
+                ));
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
