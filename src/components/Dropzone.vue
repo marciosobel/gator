@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { Event, TauriEvent, UnlistenFn } from "@tauri-apps/api/event";
-import {
-    DragDropEvent,
-    getCurrentWebviewWindow,
-} from "@tauri-apps/api/webviewWindow";
+import { DragDropEvent, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Upload } from "lucide-vue-next";
 import { onMounted, onUnmounted, ref } from "vue";
@@ -37,9 +34,7 @@ const handleDragDropEvent = (e: Event<DragDropEvent>) => {
 
 onMounted(async () => {
     const window = getCurrentWebviewWindow();
-    events.value = await Promise.all([
-        window.onDragDropEvent(handleDragDropEvent),
-    ]);
+    events.value = await Promise.all([window.onDragDropEvent(handleDragDropEvent)]);
 });
 onUnmounted(() => {
     events.value.forEach((unlisten) => unlisten());
@@ -67,6 +62,9 @@ onUnmounted(() => {
     border: 2px dashed var(--color-text);
     border-radius: var(--border-radius);
     opacity: 70%;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 
     transition: opacity 100ms ease-in-out;
 }

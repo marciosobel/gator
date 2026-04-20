@@ -1,4 +1,4 @@
-import type { Progress } from "@/commands";
+import type { Progress, FileInfo, Relay } from "@/commands";
 
 /** a state representing which point of the file transfer we are */
 export enum TransferState {
@@ -12,6 +12,10 @@ export enum TransferState {
   WAITING_FOR_CONNECTION = "waiting",
   /** the app is waiting for the croc instance to be created */
   LOADING = "loading",
+  /** `croc` is connecting to a relay */
+  CONNECTING = "connecting",
+  /** `croc` is exchanging file info */
+  INFO = "info",
 }
 
 export type TransferMetadata =
@@ -25,4 +29,12 @@ export type TransferMetadata =
   | {
       state: TransferState.WAITING_FOR_CONNECTION;
       code: string;
+    }
+  | {
+      state: TransferState.CONNECTING;
+      relay: Relay;
+    }
+  | {
+      state: TransferState.INFO;
+      info: FileInfo;
     };

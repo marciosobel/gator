@@ -15,42 +15,20 @@ export enum CrocEvent {
   INSTANCE_CREATED = "croc-instance-created",
 }
 
-export async function listenToCrocEvents(
-  handlers: CrocEventHandlers,
-): Promise<UnlistenFn[]> {
+export async function listenToCrocEvents(handlers: CrocEventHandlers): Promise<UnlistenFn[]> {
   return await Promise.all([
-    listen<Progress>(CrocEvent.HASHING, (event) =>
-      handlers.onHashing?.(event.payload),
-    ),
-    listen<Progress>(CrocEvent.SENDING, (event) =>
-      handlers.onSending?.(event.payload),
-    ),
-    listen<Progress>(CrocEvent.RECEIVING, (event) =>
-      handlers.onReceiving?.(event.payload),
-    ),
-    listen<Relay>(CrocEvent.RECEIVING_FROM, (event) =>
-      handlers.onReceivingFrom?.(event.payload),
-    ),
-    listen<Relay>(CrocEvent.SENDING_TO, (event) =>
-      handlers.onSendingTo?.(event.payload),
-    ),
-    listen<FileInfo>(CrocEvent.SENDING_INFO, (event) =>
-      handlers.onSendingInfo?.(event.payload),
-    ),
-    listen<FileInfo>(CrocEvent.RECEIVING_INFO, (event) =>
-      handlers.onReceivingInfo?.(event.payload),
-    ),
-    listen<string>(CrocEvent.CODE_GENERATED, (event) =>
-      handlers.onCodeGenerated?.(event.payload),
-    ),
+    listen<Progress>(CrocEvent.HASHING, (event) => handlers.onHashing?.(event.payload)),
+    listen<Progress>(CrocEvent.SENDING, (event) => handlers.onSending?.(event.payload)),
+    listen<Progress>(CrocEvent.RECEIVING, (event) => handlers.onReceiving?.(event.payload)),
+    listen<Relay>(CrocEvent.RECEIVING_FROM, (event) => handlers.onReceivingFrom?.(event.payload)),
+    listen<Relay>(CrocEvent.SENDING_TO, (event) => handlers.onSendingTo?.(event.payload)),
+    listen<FileInfo>(CrocEvent.SENDING_INFO, (event) => handlers.onSendingInfo?.(event.payload)),
+    listen<FileInfo>(CrocEvent.RECEIVING_INFO, (event) => handlers.onReceivingInfo?.(event.payload)),
+    listen<string>(CrocEvent.CODE_GENERATED, (event) => handlers.onCodeGenerated?.(event.payload)),
     listen(CrocEvent.DONE, () => handlers.onDone?.()),
-    listen<string>(CrocEvent.UNKNOWN, (event) =>
-      handlers.onUnknown?.(event.payload),
-    ),
+    listen<string>(CrocEvent.UNKNOWN, (event) => handlers.onUnknown?.(event.payload)),
     listen(CrocEvent.EOF, () => handlers.onError?.()),
-    listen<number>(CrocEvent.INSTANCE_CREATED, (event) =>
-      handlers.onInstanceCreated?.(event.payload),
-    ),
+    listen<number>(CrocEvent.INSTANCE_CREATED, (event) => handlers.onInstanceCreated?.(event.payload)),
   ]);
 }
 
@@ -70,10 +48,10 @@ interface CrocEventHandlers {
 }
 
 export interface Progress {
-  fileName: string;
+  file_name: string;
   percentage: number;
-  bytesSent?: number;
-  bytesTotal?: number;
+  bytes_sent?: number;
+  bytes_total?: number;
   speed?: number;
 }
 

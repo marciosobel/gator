@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { ArrowRight, Clipboard, Lightbulb } from "lucide-vue-next";
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 
 const props = defineProps<{
     onInsert: (code: string) => void | Promise<void>;
 }>();
 
 const insertedCode = ref("");
+const inputRef = ref<HTMLInputElement | null>(null);
 
 const pasteCode = async () => {
     try {
@@ -17,15 +18,29 @@ const pasteCode = async () => {
         console.error("[ERROR] Failed to paste clipboard contents: ", e);
     }
 };
+
+const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "/" && document.activeElement !== inputRef.value) {
+        e.preventDefault();
+        inputRef.value?.focus();
+    }
+};
+
+onMounted(() => {
+    inputRef.value?.focus();
+    window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <template>
-    <form
-        class="insert-code-container"
-        @submit.prevent="props.onInsert(insertedCode)"
-    >
+    <form class="insert-code-container" @submit.prevent="props.onInsert(insertedCode)">
         <div class="input-container">
             <input
+                ref="inputRef"
                 v-model="insertedCode"
                 placeholder="Insert code"
                 class="insert-code-input"
@@ -42,11 +57,7 @@ const pasteCode = async () => {
                 You can press Enter instead!
             </span>
 
-            <button
-                :disabled="!insertedCode"
-                class="start-receiving-button"
-                type="submit"
-            >
+            <button :disabled="!insertedCode" class="start-receiving-button" type="submit">
                 Go
                 <ArrowRight :size="16" />
             </button>

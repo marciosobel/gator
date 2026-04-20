@@ -1,12 +1,15 @@
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { TransferMetadata, TransferState } from "./transfer-state";
-import { killCrocInstance, listenToCrocEvents, receiveFiles, sendFiles } from "@/commands";
+import { killCrocInstance, listenToCrocEvents, receiveFiles, sendFiles, type FileInfo, type Relay } from "@/commands";
 
 export class Croc {
   private _meta: TransferMetadata = { state: TransferState.NONE };
   private listeners: UnlistenFn[] = [];
   private _done: boolean = false;
   private _pid: number | null = null;
+  private _info: FileInfo | null = null;
+  private _relay: Relay | null = null;
+  private _mode: "sending" | "receiving" | null = null;
 
   /** Subscribes to all croc events. */
   async subscribe() {
@@ -38,8 +41,39 @@ export class Croc {
           progress,
         };
       },
+      onSendingTo: (relay) => {
+        this.relay = relay;
+        this.meta = {
+          state: TransferState.CONNECTING,
+          relay,
+        };
+      },
+      onReceivingFrom: (relay) => {
+        this.relay = relay;
+        this.meta = {
+          state: TransferState.CONNECTING,
+          relay,
+        };
+      },
+      onSendingInfo: (info) => {
+        this.info = info;
+        this.meta = {
+          state: TransferState.INFO,
+          info,
+        };
+      },
+      onReceivingInfo: (info) => {
+        this.info = info;
+        this.meta = {
+          state: TransferState.INFO,
+          info,
+        };
+      },
       onDone: () => {
         this.done = true;
+        this.info = null;
+        this.relay = null;
+        this.mode = null;
         this.meta.state = TransferState.NONE;
         setTimeout(() => {
           this.done = false;
@@ -58,12 +92,18 @@ export class Croc {
 
   /** Send files through croc */
   async sendFiles(filepaths: string[]) {
+    if (this.pid !== null) await this.kill();
+
+    this.mode = "sending";
     this.meta.state = TransferState.LOADING;
     await sendFiles(filepaths);
   }
 
   /** Receive files through croc */
   async receiveFiles(code: string) {
+    if (this.pid !== null) await this.kill();
+
+    this.mode = "receiving";
     this.meta.state = TransferState.LOADING;
     await receiveFiles(code);
   }
@@ -75,6 +115,9 @@ export class Croc {
     this.meta.state = TransferState.LOADING;
     await killCrocInstance(this.pid);
     this.pid = null;
+    this.info = null;
+    this.relay = null;
+    this.mode = null;
 
     this.meta.state = TransferState.NONE;
   }
@@ -101,5 +144,29 @@ export class Croc {
 
   private set pid(value: number | null) {
     this._pid = value;
+  }
+
+  get info(): FileInfo | null {
+    return this._info;
+  }
+
+  private set info(value: FileInfo | null) {
+    this._info = value;
+  }
+
+  get relay(): Relay | null {
+    return this._relay;
+  }
+
+  private set relay(value: Relay | null) {
+    this._relay = value;
+  }
+
+  get mode(): "sending" | "receiving" | null {
+    return this._mode;
+  }
+
+  private set mode(value: "sending" | "receiving" | null) {
+    this._mode = value;
   }
 }
