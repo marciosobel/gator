@@ -1,6 +1,6 @@
 [package]
 name = "gator"
-version = "0.0.1"
+version = "0.0.2"
 description = "A Tauri App"
 authors = ["Márcio Sobel"]
 edition = "2024"
@@ -24,7 +24,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
-croc-sidecar = { version = "0.2.6", features = ["serde"] }
+croc-sidecar = { version = "0.2.8", features = ["serde"] }
 futures-util = "0.3.32"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

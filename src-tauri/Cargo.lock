@@ -608,9 +608,9 @@ dependencies = [
 
 [[package]]
 name = "croc-sidecar"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "494fe85878ade2a4bca569b737da1bbc41c11de6ec74a0c862d863e47e4aa30d"
+checksum = "bb6879df94b27b5b1da99218547c896c5fa953c79090d5ce18b4c9080c66f30b"
 dependencies = [
  "futures-util",
  "serde",
